@@ -1,0 +1,80 @@
+/* Brenda Tran
+    cssc0145
+ */
+package data_structures;
+
+import java.util.Iterator;
+import java.util.TreeMap;
+
+public class BalancedTree<K extends Comparable<K>, V> implements DictionaryADT<K, V> {
+    TreeMap balanacedTree;
+    int currentSize;
+    long modCtr;
+    K key;
+
+    public BalancedTree() {
+        balanacedTree = new TreeMap();
+        currentSize = 0;
+        modCtr = 0;
+    }
+
+    public boolean contains(K key) {
+        return balanacedTree.containsKey(key);
+    }
+
+    public boolean insert(K key, V value) {
+        if (balanacedTree.containsKey(key))
+            return false;
+        else
+            balanacedTree.put(key, value);
+        modCtr++;
+        return true;
+
+    }
+
+    public boolean remove(K key) {
+        return balanacedTree.remove(key) != null;
+    }
+
+    public V getValue(K key) {
+        if (isEmpty())
+            return null;
+        modCtr++;
+        return (V) balanacedTree.get(key);
+    }
+
+    public K getKey(V value) {
+        Iterator<V> values = values();
+        Iterator<K> keys = keys();
+        key = null;
+        while (values.hasNext()) {
+            if (((Comparable<V>) values.next()).compareTo(value) == 0){
+                key = keys.next();
+            return key;
+        }
+        keys.next();
+    }
+        return null;
+    }
+
+    public int size() {
+        return balanacedTree.size();
+    }
+
+    public boolean isFull() {
+        return false;
+    }
+
+    public boolean isEmpty() {
+        return balanacedTree.size() == 0;
+    }
+
+    public void clear() {
+        currentSize = 0;
+        modCtr++;
+        balanacedTree.clear();
+    }
+
+    public Iterator<K> keys() { return balanacedTree.keySet().iterator(); }
+
+    public Iterator<V> values() { return balanacedTree.values().iterator(); }
