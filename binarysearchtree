@@ -1,0 +1,240 @@
+/* Brenda Tran
+    cssc0145
+ */
+package data_structures;
+
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+public class BinarySearchTree<K extends Comparable<K>, V> implements DictionaryADT<K, V> {
+    private int currentSize;
+    private long modCtr;
+    private  K keyFound;
+    public Node<K, V> root;
+
+    class Node<K, V> {
+        K key;
+        V value;
+        Node<K, V> left;
+        Node<K, V> right;
+
+        public Node(K k, V v) {
+            key = k;
+            value = v;
+            left = right = null;
+        }
+
+        public int compareTo(Node<K, V> n) {
+            return ((Comparable<K>) key).compareTo((K) n.key);
+        }
+    }
+
+    public BinarySearchTree() {
+        root = null;
+        keyFound = null;
+        currentSize = 0;
+        modCtr = 0;
+    }
+
+    public boolean contains(K key) { return find(key, root) != null; }
+
+    private V find(K key, Node<K, V> n) {
+        if (n == null) return null;
+        if (key.compareTo(n.key) < 0)
+            return find(key, n.left);
+        else if (key.compareTo(n.key) > 0)
+            return find(key, n.right);
+        else
+            return n.value;
+    }
+
+    public boolean insert(K key, V value) {
+        if (contains(key)) return false;
+        if (root == null)
+            root = new Node<K, V>(key, value);
+        else
+            insert(key, value, root, null, false);
+        currentSize++;
+        modCtr++;
+        return true;
+    }
+
+    private void insert(K key, V value, Node<K, V> n, Node<K, V> parent, boolean wasLeft) {
+        if (n == null) {
+            if (wasLeft)
+                parent.left = new Node<K, V>(key, value);
+            else
+                parent.right = new Node<K, V>(key, value);
+        } else if (key.compareTo(n.key) < 0) {
+            insert(key, value, n.left, n, true);
+        } else {
+            insert(key, value, n.right, n, false);
+        }
+    }
+
+    public boolean remove(K key) {
+        if (isEmpty()) return false;
+        if (!remove(key, root, null, false))
+            return false;
+        currentSize--;
+        modCtr++;
+        return true;
+    }
+
+    private boolean remove(K key, Node<K, V> current, Node<K, V> parent, boolean wasLeft) {
+        if (current == null) return false;
+        if (key.compareTo(current.key) < 0)
+            return remove(key, current.left, current, true);
+        else if (key.compareTo(current.key) > 0)
+            return remove(key, current.right, current, false);
+        else {
+            if (current.left == null && current.right == null) {
+                if (parent == null)
+                    root = null;
+                else if (wasLeft)
+                    parent.left = null;
+                else
+                    parent.right = null;
+            } else if (current.left == null) { //one right child
+                if (parent == null)
+                    root = current.right;
+                else if (wasLeft)
+                    parent.left = current.right;
+                else
+                    parent.right = current.right;
+            } else if (current.right == null) { //one left child
+                if (parent == null)
+                    root = current.left;
+                else if (wasLeft)
+                    parent.left = current.left;
+                else
+                    parent.right = current.left;
+            } else { //two children
+                Node<K, V> temp = getSuccessor(current.right);
+                if (temp == null) {
+                    current.key = current.right.key;
+                    current.value = current.right.value;
+                    current.right = current.right.right;
+                } else {
+                    current.key = temp.key;
+                    current.value = temp.value;
+                }
+            }
+        }
+        return true;
+    }
+
+    private Node<K, V> getSuccessor(Node<K, V> n) {
+        Node<K, V> parent = null;
+        while (n.left != null) {
+            parent = n;
+            n = n.left;
+        }
+        if (parent == null)
+            return null;
+        parent.left = n.right;
+        return n;
+    }
+
+
+    public V getValue(K key) {
+        if (isEmpty()) return null;
+        return find(key, root);
+    }
+
+    public K getKey(V value) {
+        keyFound = null;
+        if (isEmpty()) return null;
+        keySearch(root, value);
+        return keyFound;
+    }
+    private void keySearch(Node<K, V> n, V value) {
+        if(n==null)
+            return;
+        if (((Comparable<V>) value).compareTo((V) n.value) == 0) {
+            keyFound = n.key;
+            return;
+        }
+        keySearch(n.right, value);
+        keySearch(n.left, value);
+    }
+
+    public int size() {
+        return currentSize;
+    }
+
+    public boolean isFull() {
+        return false;
+    }
+
+    public boolean isEmpty() {
+        return currentSize == 0;
+    }
+
+    public void clear() {
+        root = null;
+        currentSize = 0;
+        modCtr++;
+    }
+
+    public Iterator<K> keys() { return new KeyIteratorHelper(); }
+
+    public Iterator<V> values() { return new ValueIteratorHelper(); }
+
+    abstract class IteratorHelper<E> implements Iterator<E> {
+        protected Node <K, V>[] nodes; //sub classes can see this variable;
+        protected int index, sortIndex;
+        protected long modCheck;
+
+        public IteratorHelper() {
+            nodes = new Node[currentSize];
+            index = sortIndex = 0;
+            modCheck = modCtr;
+            sort(root);
+        }
+
+        private void sort(Node<K, V> n) {
+            while (n != null)
+                sort(n.left);
+            nodes[sortIndex++] = n;
+            sort(n.right);
+        }
+
+        public boolean hasNext() {
+            if (modCheck != modCtr)
+                throw new ConcurrentModificationException();
+            return index < currentSize;
+        }
+
+        public abstract E next();
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+    }
+
+    class KeyIteratorHelper<K> extends IteratorHelper<K> {
+        public KeyIteratorHelper() {
+            super();
+        }
+
+        public K next() {
+            if (!hasNext()) throw new NoSuchElementException();
+            return (K) nodes[index++].key; //change K to V for value iterator helper
+        }
+    }
+
+    class ValueIteratorHelper<V> extends IteratorHelper<V> {
+        public ValueIteratorHelper() {
+            super();
+        }
+
+        public V next() {
+            if (!hasNext()) throw new NoSuchElementException();
+            return (V) nodes[index++].value;
+        }
+    }
+}
+
