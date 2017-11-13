@@ -1,0 +1,45 @@
+/* Brenda Tran
+    cssc0145
+ */
+
+public class StockItem implements Comparable<StockItem> {
+    String SKU;
+    String description;
+    String vendor;
+    float cost;
+    float retail;
+
+    // Constructor.  Creates a new StockItem instance.
+    public StockItem(String SKU, String description, String vendor, float cost, float retail) {
+        this.SKU = SKU;
+        this.description = description;
+        this.vendor = vendor;
+        this.cost = cost;
+        this.retail = retail;
+    }
+
+    public int compareTo(StockItem n) { return (SKU.compareTo(n.SKU)); }
+
+    public int hashCode() { return SKU.hashCode(); }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getVendor() {
+        return vendor;
+    }
+
+    public float getCost() {
+        return cost;
+    }
+
+    public float getRetail() {
+        return retail;
+    }
+
+    public String toString() {
+        return SKU + " " + description + " " + vendor + " " + cost + " " + retail;
+    }
+}
+
