@@ -1,0 +1,176 @@
+/* Brenda Tran
+    cssc0145
+ */
+package data_structures;
+
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+public class Hashtable<K extends Comparable<K>, V> implements DictionaryADT<K, V> {
+    private int currentSize, maxSize, tableSize;
+    private long modCtr;
+    private LinkedList<Wrapper<K, V>>[] list;
+
+     class Wrapper<K, V> implements Comparable<Wrapper<K, V>> {
+        K key;
+        V value;
+
+        public Wrapper(K k, V v) {
+            key = k;
+            value = v;
+        }
+
+        public int compareTo(Wrapper<K, V> w) {
+            return ((Comparable<K>) key).compareTo((K) w.key);
+        }
+    }
+
+    public Hashtable(int max) {
+        currentSize = 0;
+        maxSize = max;
+        modCtr = 0;
+        tableSize = (int) (maxSize * 1.3f);
+        list = new LinkedList[tableSize];
+        for (int i = 0; i < tableSize; i++)
+            list[i] = new LinkedList<Wrapper<K, V>>();
+    }
+
+    public boolean contains(K key) {
+        return list[getHashCode(key)].contains(new Wrapper<K, V>(key, null));
+    }
+
+    public boolean insert(K key, V value) {
+        if (isFull() || contains(key)) return false;
+        list[getHashCode(key)].addLast(new Wrapper<K, V>(key, value)); //get hashcode make positive mod it by table size
+        currentSize++;
+        modCtr++;
+        return true;
+    }
+
+    public boolean remove(K key) {
+        if (isEmpty()) return false;
+        if (contains(key)) {
+            list[getHashCode(key)].remove(new Wrapper<K, V>(key, null));
+            currentSize--;
+            modCtr++;
+            return true;
+        }
+        return false;
+    }
+
+    public V getValue(K key) {
+        if (isEmpty()) return null;
+        Wrapper<K, V> temp = list[getHashCode(key)].get(new Wrapper<K, V>(key, null));
+        if (temp == null) return null;
+        return temp.value;
+    }
+
+    public K getKey(V value) {
+        if(isEmpty()) return null;
+        for (int i = 0; i < tableSize; i++)
+            for (Wrapper<K, V> node : list[i])
+                if (((Comparable<V>) value).compareTo((V) node.value) == 0)
+                    return node.key;
+        return null;
+    }
+
+    public int size() { return currentSize; }
+
+    public boolean isFull() { return currentSize == maxSize; }
+
+    public boolean isEmpty() { return currentSize == 0; }
+
+    public void clear() {
+        for (int i = 0; i <= tableSize; i++) {
+            list[i].clear();
+        }
+        currentSize = 0;
+        modCtr++;
+    }
+
+    public Iterator<K> keys() { return new KeyIteratorHelper(); }
+
+    public Iterator<V> values() { return new ValueIteratorHelper(); }
+
+    abstract class IteratorHelper<E> implements Iterator<E> {
+        protected Wrapper<K, V>[] nodes; //sub classes can see this variable;
+        protected int index;
+        protected long modCheck;
+
+        public IteratorHelper() {
+            nodes = new Wrapper[currentSize];
+            index = 0;
+            modCheck = modCtr;
+            for (int i = 0; i < tableSize; i++) {
+                for (Wrapper<K, V> w : list[i])
+                    nodes[index++] = w;
+            }
+            nodes = (Wrapper<K, V>[]) shellSort(nodes); //make sort inside your IteratorHelper. private void sort() //shell sort, copy from lecture notes
+        }
+
+        public boolean hasNext() {
+            if (modCheck != modCtr) throw new ConcurrentModificationException();
+            return index < currentSize;
+        }
+
+        public abstract E next();
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+    }
+
+    class KeyIteratorHelper<K> extends IteratorHelper<K> {
+        public KeyIteratorHelper() {
+            super();
+        }
+
+        public K next() {
+            if (!hasNext()) throw new NoSuchElementException();
+            return (K) nodes[index++].key; //change K to V for value iterator helper
+        }
+    }
+
+    class ValueIteratorHelper<V> extends IteratorHelper<V> {
+        public ValueIteratorHelper() {
+            super();
+        }
+
+        public V next() {
+            if (!hasNext()) throw new NoSuchElementException();
+            return (V) nodes[index++].value;
+        }
+    }
+
+    private int getHashCode(K key) {
+        return (key.hashCode() & 0x7FFFFFFF) % tableSize;
+    }
+
+    private Wrapper<K, V>[] shellSort(Wrapper[] n) {
+        if(n.length < 2) return n;
+        int in=0, out=0, h=1;
+        Wrapper<K,V> temp=null;
+        int size = n.length;
+
+        while(h <= size/3)
+            h = h*3+1;
+        while(h > 0) {
+            for(out=h; out < size; out++) {
+                temp = n[out];
+                in = out;
+                while(in > h-1 &&
+                        ((Comparable)n[in-h]).compareTo(temp) >= 0) {
+                    n[in] = n[in-h];
+                    in -= h;
+                }
+                n[in] = temp;
+
+            } // end for
+            h = (h-1)/3;
+        } // end while
+
+        return n;
+    }
+}
