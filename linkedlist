@@ -1,0 +1,232 @@
+/**
+ Brenda Tran
+ cssc 0145
+ */
+
+package data_structures;
+
+
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+public class LinkedList<E extends Comparable<E>> implements UnorderedListADT<E> {
+    private class Node<T> {
+        T data;
+        Node <T> next;
+
+        public Node(T obj) {
+            data = obj;
+            next = null;
+        }
+    }
+
+    private Node <E> head,tail;
+    private int currentSize ;
+    private long modCtr;
+    public LinkedList() {
+        head = tail = null;
+        currentSize = 0;
+        modCtr = 0;
+    }
+
+    public void addFirst(E obj) {
+        Node<E> newNode = new Node<E>(obj);
+        if (head == null) {
+            head = tail = newNode;
+        } else {
+            newNode.next = head;
+            head = newNode;
+        }
+        modCtr++;
+        currentSize++;
+    }
+
+    public void addLast(E obj) {
+        Node<E> newNode = new Node<E>(obj);
+        if(head == null) {
+            head = tail = newNode;
+        } else {
+            tail.next = newNode;
+            tail = newNode;
+        }
+        modCtr++;
+        currentSize++;
+    }
+
+    public void add(E obj, int position) {
+        Node<E> newNode = new Node<E>(obj);
+        Node<E> previous = null, current = head;
+        if (position < 1 || position > currentSize+1)
+            throw new RuntimeException("Unable to add. Position out of range");
+        for (int i = 1; i < position; i++) {
+            previous = current;
+            current = current.next;
+        }
+        if (head == null) {
+            head = tail = newNode;
+        } else if (previous == null) {
+            newNode.next = head;
+            head = newNode;
+        } else if (current == null) {
+            tail.next = newNode;
+            tail = newNode;
+        } else {
+            previous.next = newNode;
+            newNode.next = current;
+        }
+        modCtr++;
+        currentSize++;
+
+    }
+
+    public E remove(int position) {
+        Node<E> previous = null, current = head;
+        if (position < 1 || position > currentSize || head == null)
+            throw new RuntimeException("Unable to locate position.");
+        for (int i = 1; i < position; i++) {
+            previous = current;
+            current = current.next;
+        }
+        if (previous == null) {
+            head = head.next;
+        } else if (current == null) {
+            previous.next = null;
+            tail = previous;
+        } else {
+            previous.next = current.next;
+        }
+        currentSize--;
+        modCtr++;
+        return current.data;
+    }
+
+    public E remove(E obj) {
+        int index = find(obj);
+        if (index == -1)
+            return null;
+        Node<E> previous = null, current = head;
+        for (int i = 1; i < index; i++) {
+            previous = current;
+            current = current.next;
+        }
+        if (previous == null) {
+            head = head.next;
+        } else if (current == null) {
+            previous.next = null;
+            tail = previous;
+        } else {
+            previous.next = current.next;
+        }
+        currentSize--;
+        modCtr++;
+        return current.data;
+    }
+    public E removeFirst() {
+        if (head == null)
+            return null;
+        E temp = head.data;
+        if (head.next == null) {
+            head = tail = null;
+        } else {
+            head = head.next;
+        }
+        currentSize--;
+        modCtr++;
+        return temp;
+    }
+    public E removeLast() {
+        if (head == null)
+            return null;
+        Node<E> previous = null, current = head;
+        while (current != tail) {
+            previous = current;
+            current = current.next;
+        }
+        if (previous == null) {
+            head = tail = null;
+        } else {
+            previous.next = null;
+            tail = previous;
+        }
+        currentSize--;
+        modCtr++;
+        return current.data;
+    }
+    public E get(int position) {
+        Node <E> current = head;
+        if (position < 1 || position > currentSize )
+            throw new RuntimeException("Unable to get position. Out of Range");
+        for (int i = 1; i < position; i++) {
+            current = current.next;
+        }
+        return current.data;
+    }
+    public E get(E obj) {
+        Node <E> current = head;
+        int index = find(obj);
+        if (index == -1 || current == null )
+            return null;
+        for (int i = 1; i < index; i++) {
+            current = current.next;
+        }
+        return current.data;
+    }
+    public int find(E obj) {
+        Node<E> current = head;
+        if (head == null)
+            return -1;
+        int index = 1;
+        while (current != null && obj.compareTo(current.data) != 0) {
+            index++;
+            current = current.next;
+        }
+        if (current == null)
+            return -1;
+
+        return index;
+    }
+
+    public boolean contains(E obj) { return find(obj) != -1; }
+
+    public void clear() {
+        currentSize = 0;
+        head = null;
+        modCtr++;
+    }
+
+    public boolean isEmpty() { return head == null; }
+
+    public boolean isFull() { return false; }
+
+    public int size() { return currentSize; }
+
+    public Iterator<E> iterator() { return new IteratorHelper(); }
+
+    class IteratorHelper implements Iterator<E> {
+        Node<E> current;
+        long stateCheck;
+
+        public IteratorHelper() {
+            current = head;
+            stateCheck = modCtr;
+        }
+
+        public boolean hasNext() {
+            if(stateCheck != modCtr)
+                throw new ConcurrentModificationException();
+            return current != null;
+        }
+
+        public E next() {
+            if (!hasNext())
+                throw new NoSuchElementException();
+            E temp = current.data;
+            current = current.next;
+            return temp;
+        }
+
+        public void remove() { throw new UnsupportedOperationException(); }
+    }
+}
+
