@@ -1,0 +1,60 @@
+/* Brenda Tran
+    cssc0145
+ */
+import data_structures.*;
+import java.util.Iterator;
+
+public class ProductLookup {
+    DictionaryADT<String, StockItem> productTable;
+
+    public ProductLookup(int maxSize) { productTable = new Hashtable<>(maxSize); }
+
+    public void addItem(String SKU, StockItem item) { productTable.insert(SKU, item); }
+
+
+    public StockItem getItem(String SKU) {
+        return productTable.getValue(SKU);
+    }
+
+    public float getRetail(String SKU) {
+        if (productTable.getValue(SKU) != null)
+            return productTable.getValue(SKU).getRetail();
+        return -0.01f;
+    }
+
+    public float getCost(String SKU) {
+        if (productTable.getValue(SKU) != null)
+            return productTable.getValue(SKU).getCost();
+        return -0.01f;
+    }
+
+    public String getDescription(String SKU) {
+        if (productTable.getValue(SKU) != null)
+            return productTable.getValue(SKU).getDescription();
+        return null;
+    }
+
+    public boolean deleteItem(String SKU) {
+        return productTable.remove(SKU);
+    }
+
+    public void printAll() {
+        Iterator<StockItem> productValue = productTable.values();
+        while(productValue.hasNext())
+            System.out.println(productValue.next());
+    }
+
+    public void print(String vendor) {
+        Iterator<String> productKey = productTable.keys();
+        while(productKey.hasNext()) {
+            String item = productKey.next();
+            if (vendor.compareTo(productTable.getValue(item).getVendor()) == 0)
+                System.out.println(item);
+        }
+    }
+    public Iterator<String> keys() {
+        return productTable.keys();
+    }
+
+    public Iterator<StockItem> values() { return productTable.values(); }
+}
