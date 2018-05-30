@@ -1,2 +1,2 @@
 # Product-Lookup-Data-Structures---Java
-Implemented hashtables and search trees to develop part of a checkout system
+Implemented hashtables, linked lists, and search trees to create part of a checkout system
